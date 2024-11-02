@@ -1,7 +1,6 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-import { dataSource, mockData } from "./services/db";
-import sensorsDataRouter from './routes/sensorsData'
+import { dataSource, generateRandomData, mockData } from "./services/db";
 import { Sensors } from "./entities/sensors";
 
 dotenv.config();
@@ -13,22 +12,22 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
 
-app.use('/sensorsData', sensorsDataRouter)
-
-
 const main = async () => {
   try {
-
     await dataSource.initialize();
 
     // Check to see if the mock sensors already exist in db
-    const sensorsRepository = dataSource.getRepository(Sensors)
+    const sensorsRepository = dataSource.getRepository(Sensors);
     const existingSensor = await sensorsRepository.findOneBy({});
     if (!existingSensor) {
-      mockData()
+      mockData();
     }
 
     console.log("Connected to Postgres");
+
+    setInterval(async () => {
+      await generateRandomData();
+    }, 5000);
   } catch (err) {
     if (err instanceof Error) {
       if ((err as any).code === "ECONNRESET") {
